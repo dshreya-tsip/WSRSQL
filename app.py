@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify, render_template, send_file
 import sqlite3
 import csv
@@ -7,6 +6,7 @@ import os
 app = Flask(__name__)
 DB_FILE = 'wsr_data.db'
 
+# ✅ Initialize the database and create the table if it doesn't exist
 def init_db():
     with sqlite3.connect(DB_FILE) as conn:
         conn.execute('''
@@ -19,6 +19,9 @@ def init_db():
                 solutions TEXT
             )
         ''')
+
+# ✅ Ensure database is initialized even on Render
+init_db()
 
 @app.route('/')
 def index():
@@ -39,7 +42,10 @@ def save_data():
     try:
         with sqlite3.connect(DB_FILE) as conn:
             conn.execute("DELETE FROM weekly_status")  # Clear old data
-            conn.executemany("INSERT INTO weekly_status (year, month, weekdays, etria, solutions) VALUES (?, ?, ?, ?, ?)", data)
+            conn.executemany(
+                "INSERT INTO weekly_status (year, month, weekdays, etria, solutions) VALUES (?, ?, ?, ?, ?)",
+                data
+            )
         return jsonify({'message': 'Data saved successfully to SQLite.'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -58,6 +64,6 @@ def download_csv():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# This part is only used if you run locally
 if __name__ == '__main__':
-    init_db()
     app.run(host='0.0.0.0', port=8080)
